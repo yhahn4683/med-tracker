@@ -1,0 +1,103 @@
+<!DOCTYPE html> 
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💊 Med Tracker</title>
+
+  <!-- FullCalendar v5.11.3 (안정적으로 작동하는 버전) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    #calendar {
+      max-width: 900px;
+      margin: 40px auto;
+      background-color: #fff;
+      color: #000;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    button {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>💊 Med Tracker</h1>
+  <button onclick="recordMed()">Record Med</button>
+  <div id="calendar"></div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzO6lqcKK1EMtZ2mvMCQnlHSVjMR_C5AuftQ2InfucHdLNjWpcDsvvocXdtGJ5qZYs5/exec";
+    const medEmoji = "💊";
+    let calendar;
+
+    async function loadMedDatesAndRenderCalendar() {
+      const calendarEl = document.getElementById('calendar');
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: ''
+        },
+        events: []
+      });
+
+      try {
+        const res = await fetch(scriptURL);
+        const text = await res.text();
+        const dates = text.trim().split("\n");
+
+        dates.forEach(date => {
+          if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            calendar.addEvent({
+              title: medEmoji,
+              start: date,
+              allDay: true
+            });
+          }
+        });
+      } catch (err) {
+        console.error("날짜 불러오기 실패:", err);
+      }
+
+      calendar.render();
+    }
+
+    function recordMed() {
+      fetch(scriptURL, { method: 'POST' })
+        .then(() => {
+          alert("💊 기록 완료!");
+          const today = new Date().toISOString().split('T')[0];
+          calendar.addEvent({ title: medEmoji, start: today, allDay: true });
+        })
+        .catch(err => alert("에러 발생: " + err));
+    }
+
+    document.addEventListener('DOMContentLoaded', loadMedDatesAndRenderCalendar);
+  </script>
+</body>
+</html>
